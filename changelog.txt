@@ -1,0 +1,31 @@
+===============================================
+ PosiStageNet Protocol v2.0, November 4th 2014
+
+	 Copyright (c) 2014 VYV Corporation
+===============================================
+
+This package contains the documentation and a c++ implementation of the PosiStageNet protocol.
+It also contains three simple demo of how to use the implementation from the server or the client side.
+
+The implementation only uses ".hpp" files. If you want to use this implementation in your project, 
+you need to include the file "psn_lib.hpp" in one of your ".cpp" file.  
+
+The implementation is cross-platform so it should compile under Windows, Linux and Mac OS X.
+In revenge, the example projects will only work under a Windows operating system as they use a Windows specific implementation
+of a simple udp_socket class. If you want to run these demo on another platform, you will need to write your own udp_socket class.
+
+For any question about the PosiStageNet protocol, please write at psn@vyv.ca
+
+===============================================
+Change Log
+===============================================
+
+Version 2.02 - 2018-01-03
+===============================================
+
+- Bug: 
+  - Description: psn_tracker class constructor always was setting its member 'validity' to 0, ignoring the given parameter
+  - Fix: The constructor now uses the given parameter to initialize the member 'validity'.
+- Bug:
+  - Description: The frame_id needed to be sequential. If not, a frame could be lost when reconstructing frame packets.
+  - Fix: Frame IDs can now follow any sequence, as long as two consecutive frames have different IDs. 

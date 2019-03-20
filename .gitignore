@@ -1,9 +1,10 @@
 *.user
 *.sdf
 *.opensdf
+*.opendb
 *.suo
 *.db
 *.log
-demo/bin/
-demo/build/
+examples/vs2015/bin/
+examples/vs2015/build/
 .vs/
