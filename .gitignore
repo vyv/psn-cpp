@@ -1,0 +1,9 @@
+*.user
+*.sdf
+*.opensdf
+*.suo
+*.db
+*.log
+demo/bin/
+demo/build/
+.vs/
