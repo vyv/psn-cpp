@@ -6,7 +6,7 @@ Version 2.02 - 2018-01-03
 ===============================================
 
 - Bug: 
-  - Description: psn_tracker class constructor always was setting its member 'validity' to 0, ignoring the given parameter
+  - Description: psn_tracker class constructor was always setting its member 'validity' to 0, ignoring the given parameter
   - Fix: The constructor now uses the given parameter to initialize the member 'validity'.
 - Bug:
   - Description: The frame_id needed to be sequential. If not, a frame could be lost when reconstructing frame packets.
