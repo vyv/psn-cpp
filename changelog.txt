@@ -1,22 +1,4 @@
 ===============================================
- PosiStageNet Protocol v2.0, November 4th 2014
-
-	 Copyright (c) 2014 VYV Corporation
-===============================================
-
-This package contains the documentation and a c++ implementation of the PosiStageNet protocol.
-It also contains three simple demo of how to use the implementation from the server or the client side.
-
-The implementation only uses ".hpp" files. If you want to use this implementation in your project, 
-you need to include the file "psn_lib.hpp" in one of your ".cpp" file.  
-
-The implementation is cross-platform so it should compile under Windows, Linux and Mac OS X.
-In revenge, the example projects will only work under a Windows operating system as they use a Windows specific implementation
-of a simple udp_socket class. If you want to run these demo on another platform, you will need to write your own udp_socket class.
-
-For any question about the PosiStageNet protocol, please write at psn@vyv.ca
-
-===============================================
 Change Log
 ===============================================
 
