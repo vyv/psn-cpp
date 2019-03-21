@@ -2,7 +2,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2014 VYV Corporation
+Copyright (c) 2019 VYV Corporation
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -37,70 +37,70 @@ namespace psn
 {
 
 // PSN VERSION
-#define PSN_HIGH_VERSION				2
-#define PSN_LOW_VERSION					0
+#define PSN_HIGH_VERSION                2
+#define PSN_LOW_VERSION                 0
 
 // DEFAULT UDP PORT and MULTICAST ADDRESS
-#define PSN_DEFAULT_UDP_PORT			56565
-#define PSN_DEFAULT_UDP_MULTICAST_ADDR	"236.10.10.10"
+#define PSN_DEFAULT_UDP_PORT            56565
+#define PSN_DEFAULT_UDP_MULTICAST_ADDR  "236.10.10.10"
 
 // MAX UDP PACKET SIZE
-#define PSN_MAX_UDP_PACKET_SIZE			1500
+#define PSN_MAX_UDP_PACKET_SIZE         1500
 
 // - PSN INFO -
-#define PSN_INFO_PACKET					0x6756
-#define PSN_INFO_PACKET_HEADER				0x0000
-#define PSN_INFO_SYSTEM_NAME				0x0001
-#define PSN_INFO_TRACKER_LIST				0x0002
-//#define PSN_INFO_TRACKER						tracker_id
-#define PSN_INFO_TRACKER_NAME						0x0000
+#define PSN_INFO_PACKET                 0x6756
+#define PSN_INFO_PACKET_HEADER          0x0000
+#define PSN_INFO_SYSTEM_NAME            0x0001
+#define PSN_INFO_TRACKER_LIST           0x0002
+//#define PSN_INFO_TRACKER              tracker_id
+#define PSN_INFO_TRACKER_NAME           0x0000
 
 // - PSN DATA -
-#define PSN_DATA_PACKET					0x6755
-#define PSN_DATA_PACKET_HEADER				0x0000
-#define PSN_DATA_TRACKER_LIST				0x0001
-//#define PSN_DATA_TRACKER						tracker_id
-#define PSN_DATA_TRACKER_POS						0x0000
-#define PSN_DATA_TRACKER_SPEED						0x0001
-#define PSN_DATA_TRACKER_ORI						0x0002
-#define PSN_DATA_TRACKER_STATUS						0x0003
+#define PSN_DATA_PACKET                 0x6755
+#define PSN_DATA_PACKET_HEADER          0x0000
+#define PSN_DATA_TRACKER_LIST           0x0001
+//#define PSN_DATA_TRACKER              tracker_id
+#define PSN_DATA_TRACKER_POS            0x0000
+#define PSN_DATA_TRACKER_SPEED          0x0001
+#define PSN_DATA_TRACKER_ORI            0x0002
+#define PSN_DATA_TRACKER_STATUS         0x0003
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 struct float3
 {
-	float3( float px = 0 , float py = 0 , float pz = 0 ) 
-		: x( px ) , y( py ) , z( pz )
-	{}
+    float3( float px = 0 , float py = 0 , float pz = 0 ) 
+        : x( px ) , y( py ) , z( pz )
+    {}
 
-	float x , y , z ;
+    float x , y , z ;
 } ;
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 struct psn_tracker
 {
-	psn_tracker( uint16_t id = 0 , 
-				 const ::std::string & name = "" , 
-				 float3 pos = float3() , 
-				 float3 speed = float3() , 
-				 float3 ori = float3() , 
-				 float validity = 0.f )
-		: id_( id )
-		, name_( name )
-		, pos_( pos )
-		, speed_( speed ) 
-		, ori_( ori )
-		, validity_( validity )
-	{}
+    psn_tracker( uint16_t id = 0 , 
+                 const ::std::string & name = "" , 
+                 float3 pos = float3() , 
+                 float3 speed = float3() , 
+                 float3 ori = float3() , 
+                 float validity = 0.f )
+        : id_( id )
+        , name_( name )
+        , pos_( pos )
+        , speed_( speed ) 
+        , ori_( ori )
+        , validity_( validity )
+    {}
 
-	uint16_t id_ ;
+    uint16_t id_ ;
 
-	::std::string name_ ;
+    ::std::string name_ ;
 
-	float3 pos_ ;
-	float3 speed_ ;
-	float3 ori_ ;
+    float3 pos_ ;
+    float3 speed_ ;
+    float3 ori_ ;
 
-	float validity_ ;
+    float validity_ ;
 } ;
 
 typedef ::std::map< uint16_t , psn_tracker > psn_tracker_array ; // map< id , psn_tracker >
