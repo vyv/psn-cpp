@@ -1,4 +1,4 @@
-![psn logo](https://www.posistage.net/wp-content/uploads/thegem-logos/logo_6f12e80755dcd5d74ec129f475257f13_3x.png)
+![psn logo](https://github.com/vyv-ca/psn-cpp/blob/master/doc/psn-logo.png)
 
 # An Open Protocol for On-Stage, Live 3D Position Data
 
