@@ -1,263 +1,65 @@
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-/*
-The MIT License (MIT)
-
-Copyright (c) 2019 VYV Corporation
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
+/**
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2014 VYV Corporation
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+**/
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 #ifndef PSN_DECODER_IMPL_HPP
 #define PSN_DECODER_IMPL_HPP
 
-#include <psn_decoder.hpp> 
+#include "psn_decoder.hpp"
+#include <utility>
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 namespace psn
 {
-
+    
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 psn_decoder::
 psn_decoder( void )
-    : last_frame_id_( 0 )
-    , frame_packet_counter_( 0 )
+    : info_packet_count_( 0 )
+    , data_packet_count_( 0 )
 {
-    // PSN_DATA 
-    psn_data_packet_        = new psn_chunk                  ( PSN_DATA_PACKET        , 0                                   , "PSN_DATA_PACKET" ) ;
-    psn_data_packet_header_ = new psn_chunk                  ( PSN_DATA_PACKET_HEADER , new ::psn::psn_packet_header_data() , "PSN_DATA_PACKET_HEADER" ) ;
-    psn_data_tracker_list_  = new psn_data_tracker_list_chunk( PSN_DATA_TRACKER_LIST  , 0                                   , "PSN_DATA_TRACKER_LIST" ) ;
-    // PSN_DATA_TRACKER chunks will be dynamically instantiated on decode_data 
-
-    psn_data_packet_->add_child( psn_data_packet_header_ ) ;
-    psn_data_packet_->add_child( psn_data_tracker_list_ ) ;
-
-    // PSN_INFO
-    psn_info_packet_        = new psn_chunk                  ( PSN_INFO_PACKET        , 0                                   , "PSN_INFO_PACKET" ) ;
-    psn_info_packet_header_ = new psn_chunk                  ( PSN_INFO_PACKET_HEADER , new ::psn::psn_packet_header_data() , "PSN_INFO_PACKET_HEADER" ) ;
-    psn_info_system_name_   = new psn_chunk                  ( PSN_INFO_SYSTEM_NAME   , new ::psn::psn_name_data()          , "PSN_INFO_SYSTEM_NAME" ) ;
-    psn_info_tracker_list_  = new psn_info_tracker_list_chunk( PSN_INFO_TRACKER_LIST  , 0                                   , "PSN_INFO_TRACKER_LIST" ) ;
-    // PSN_INFO_TRACKER chunks will be dynamically instantiated on decode_info
-
-    psn_info_packet_->add_child( psn_info_packet_header_ ) ;
-    psn_info_packet_->add_child( psn_info_system_name_ ) ;
-    psn_info_packet_->add_child( psn_info_tracker_list_ ) ;
-}
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-psn_decoder::
-~psn_decoder( void ) 
-{
-    delete psn_data_packet_ ;
-    psn_data_packet_ = 0 ;
-
-    delete psn_info_packet_ ;
-    psn_info_packet_ = 0 ;
-}
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-uint8_t 
-psn_decoder::
-get_last_decoded_frame_id( void ) const 
-{
-    return last_frame_id_ ;
-}
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-const psn_tracker_array &
-psn_decoder::
-get_trackers( void ) const
-{
-    return trackers_ ;
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 bool
 psn_decoder::
-get_psn_server_name( ::std::string & server_name )
+decode( const char * packet_ptr , size_t packet_size )
 {
-    if ( psn_info_system_name_ != 0 )
-    {
-        ::psn::psn_name_data * data = (::psn::psn_name_data *)psn_info_system_name_->get_data() ;
+    packet_t packet( packet_ptr , packet_size ) ;
+    
+    auto header = packet.cast_to< const chunk_header >() ;
 
-        if ( data != 0 )
-        {
-            server_name = data->name_ ;
-            return true ;
-        }
-    }
-
-    return false ;
-}
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-bool
-psn_decoder::
-decode( const ::std::string & packet )
-{
-    const char * buffer = packet.c_str() ;
-    size_t buffer_size = packet.length() ;
-
-    if ( buffer_size < SIZE_OF_PSN_CHUNK_HEADER ) 
+    if ( !header )
         return false ;
 
-    psn_chunk_header chunk_header ;
+    packet.apply_offset( sizeof( chunk_header ) ) ;
 
-    // decode root chunk header
-    memcpy( &chunk_header , buffer , SIZE_OF_PSN_CHUNK_HEADER ) ;
-
-    if ( chunk_header.id_ == psn_data_packet_->get_id() )
+    switch ( header->id )
     {
-        return decode_data_packet( (void *)buffer , buffer_size ) ;
-    }
-    else if ( chunk_header.id_ == psn_info_packet_->get_id() )
-    {
-        return decode_info_packet( (void *)buffer , buffer_size ) ;
-    }
-
-    return false ;
-}
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-bool
-psn_decoder::
-decode_data_packet( void * buffer , size_t buffer_size ) 
-{
-    // Remove all children from PSN_DATA_TRACKER_LIST chunk
-    // It will add its own children during the decode process
-    psn_data_tracker_list_->remove_all_children() ;
-
-    if ( !psn_data_packet_->decode( buffer , buffer_size ) )
-        return false ;
-
-    bool last_packet = false ;
-
-    // Check if it's the last packet for this frame
-    {
-        psn_packet_header_data * data = (psn_packet_header_data *)psn_data_packet_header_->get_data() ;
-
-        if ( data != 0 )
-        {
-            // Backup solution in case data->frame_packet_count_ is bad or we missed a packet.
-            bool expect_new_frame = ( frame_packet_counter_ == 0 ) ;
-
-            if ( data->frame_id_ != last_frame_id_ && !expect_new_frame )
-            {
-                frame_packet_counter_ = 0 ;
-
-                trackers_ = frame_trackers_ ;
-                frame_trackers_.clear() ;
-            }
-
-            last_frame_id_ = data->frame_id_ ;
-
-            // Is it the last packet ?
-            if ( data->frame_packet_count_ == ++frame_packet_counter_ )
-            {
-                last_packet = true ; // Will copy frame_trackers_ to trackers_ at the end.
-                frame_packet_counter_ = 0 ;
-            }
-        }
-    }
-
-    // Get all the PSN_DATA_TRACKER chunks and extract the trackers data from them 
-    ::std::vector< ::psn::psn_chunk * > trackers_chunk =
-        psn_data_tracker_list_->get_children() ;
-
-    for ( size_t i = 0 ; i < trackers_chunk.size() ; ++i )
-    {
-        psn_tracker t ;
-        t.id_ = trackers_chunk[ i ]->get_id() ;
-
-        // Copy tracker info
-        if ( trackers_info_.find( t.id_ ) != trackers_info_.end() )
-            t.name_ = trackers_info_[ t.id_ ] ;
-
-        // Tracker Pos
-        {
-            ::psn::psn_chunk * tracker_pos_chunk = trackers_chunk[ i ]->get_child_by_id( PSN_DATA_TRACKER_POS ) ;
-            if ( tracker_pos_chunk != 0 )
-            {
-                psn_vec3_data * pos_data = (psn_vec3_data *)tracker_pos_chunk->get_data() ;
-
-                if ( pos_data != 0 )
-                {
-                    t.pos_.x = pos_data->vec_.x ;
-                    t.pos_.y = pos_data->vec_.y ;
-                    t.pos_.z = pos_data->vec_.z ;
-                }
-            }
-        }
-
-        // Tracker Speed
-        {
-            ::psn::psn_chunk * tracker_speed_chunk = trackers_chunk[ i ]->get_child_by_id( PSN_DATA_TRACKER_SPEED ) ;
-            if ( tracker_speed_chunk != 0 )
-            {
-                psn_vec3_data * speed_data = (psn_vec3_data *)tracker_speed_chunk->get_data() ;
-
-                if ( speed_data != 0 )
-                {
-                    t.speed_.x = speed_data->vec_.x ;
-                    t.speed_.y = speed_data->vec_.y ;
-                    t.speed_.z = speed_data->vec_.z ;
-                }
-            }
-        }
-
-        // Tracker Ori
-        {
-            ::psn::psn_chunk * tracker_ori_chunk = trackers_chunk[ i ]->get_child_by_id( PSN_DATA_TRACKER_ORI ) ;
-            if ( tracker_ori_chunk != 0 )
-            {
-                psn_vec3_data * ori_data = (psn_vec3_data *)tracker_ori_chunk->get_data() ;
-
-                if ( ori_data != 0 )
-                {
-                    t.ori_.x = ori_data->vec_.x ;
-                    t.ori_.y = ori_data->vec_.y ;
-                    t.ori_.z = ori_data->vec_.z ;
-                }
-            }
-        }
-
-        // Tracker status
-        {
-            ::psn::psn_chunk * tracker_status_chunk = trackers_chunk[ i ]->get_child_by_id( PSN_DATA_TRACKER_STATUS ) ;
-            if ( tracker_status_chunk != 0 )
-            {
-                psn_tracker_status_data * status_data = (psn_tracker_status_data *)tracker_status_chunk->get_data() ;
-
-                if ( status_data != 0 )
-                {
-                    t.validity_ = status_data->validity_ ;
-                }
-            }
-        }
-
-        frame_trackers_[ t.id_ ] = t ;
-    }
-
-    if ( last_packet )
-    {
-        trackers_ = frame_trackers_ ;
-        frame_trackers_.clear() ;
+    case INFO_PACKET: return decode_info( packet , *header ) ;
+    case DATA_PACKET: return decode_data( packet , *header ) ;
     }
 
     return true ;
@@ -266,36 +68,212 @@ decode_data_packet( void * buffer , size_t buffer_size )
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 bool
 psn_decoder::
-decode_info_packet( void * buffer , size_t buffer_size ) 
+decode_info( packet_t packet , const chunk_header & header )
 {
-    // Remove all children from PSN_INFO_TRACKER_LIST chunk
-    // It will add its own children during the decode process
-    psn_info_tracker_list_->remove_all_children() ;
+    bool success = decode_children( packet , header ,
+        [this]( packet_t packet , const chunk_header & child_header )
+        {
+            switch ( child_header.id )
+            {
+            case INFO_PACKET_HEADER: return decode_info_header( packet ) ;
+            case INFO_SYSTEM_NAME:   return decode_string( packet , child_header , info_to_commit_.system_name ) ;
+            case INFO_TRACKER_LIST:  return decode_info_tracker_list( packet , child_header ) ;
+            }
+            return true ;
+        } ) ;
 
-    if ( !psn_info_packet_->decode( (void *)buffer , buffer_size ) )
+    if ( ++info_packet_count_ >= info_to_commit_.header.frame_packet_count )
+    {
+        info_ = ::std::move( info_to_commit_ ) ;
+        info_to_commit_ = info_t() ;
+        info_packet_count_ = 0 ;
+    }
+
+    return success ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_info_header( packet_t packet )
+{
+    uint8_t last_frame_id = data_to_commit_.header.frame_id ;
+    bool expect_new_frame = ( data_packet_count_ == 0 ) ;
+
+    if ( !decode_type( packet , info_to_commit_.header ) )
         return false ;
 
-    // Get all the PSN_INFO_TRACKER chunks and extract the trackers name from them 
-    ::std::vector< ::psn::psn_chunk * > trackers_chunk =
-        psn_info_tracker_list_->get_children() ;
-
-    for ( size_t i = 0 ; i < trackers_chunk.size() ; ++i )
+    // Backup solution in case frame_packet_count is bad or we missed a packet
+    if ( info_to_commit_.header.frame_id != last_frame_id && !expect_new_frame )
     {
-        uint16_t tracker_id = trackers_chunk[ i ]->get_id() ;
+        info_ = info_to_commit_ ;
+        info_packet_count_ = 0 ;
+    }
+                
+    return true ;
+}
 
-        // Tracker Name
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_info_tracker_list( packet_t packet , const chunk_header & header )
+{
+    return decode_children( packet , header ,
+        [this]( packet_t packet , const chunk_header & child_header )
         {
-            ::psn::psn_chunk * tracker_name_chunk = trackers_chunk[ i ]->get_child_by_id( PSN_INFO_TRACKER_NAME ) ;
-            if ( tracker_name_chunk != 0 )
-            {
-                psn_name_data * name_data = (psn_name_data *)tracker_name_chunk->get_data() ;
+            return decode_info_tracker( packet , child_header ) ;
+        } ) ;
+}
 
-                if ( name_data != 0 )
-                {
-                    trackers_info_[ tracker_id ] = name_data->name_ ;
-                }
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_info_tracker( packet_t packet , const chunk_header & header )
+{
+    ::std::string & tracker_name = info_to_commit_.tracker_names[ header.id ] ;
+
+    return decode_children( packet , header ,
+        [&]( packet_t packet , const chunk_header & child_header )
+        {
+            if ( child_header.id == INFO_TRACKER_NAME )
+                return decode_string( packet , child_header , tracker_name ) ;
+            return true ;
+        } ) ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_data( packet_t packet , const chunk_header & header )
+{
+    bool success = decode_children( packet , header ,
+        [this]( packet_t packet , const chunk_header & child_header )
+        {
+            switch ( child_header.id )
+            {
+            case DATA_PACKET_HEADER: return decode_data_header( packet ) ;
+            case DATA_TRACKER_LIST:  return decode_data_tracker_list( packet , child_header ) ;
             }
-        }
+            return true ;
+        } ) ;
+
+    if ( ++data_packet_count_ >= data_to_commit_.header.frame_packet_count )
+    {
+        data_ = ::std::move( data_to_commit_ ) ;
+        data_to_commit_.trackers.clear() ;
+        data_packet_count_ = 0 ;
+    }
+
+    return success ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_data_header( packet_t packet )
+{
+    uint8_t last_frame_id = data_to_commit_.header.frame_id ;
+    bool expect_new_frame = ( data_packet_count_ == 0 ) ;
+                
+    if ( !decode_type( packet , data_to_commit_.header ) )
+        return false ;
+
+    // Backup solution in case frame_packet_count is bad or we missed a packet
+    if ( data_to_commit_.header.frame_id != last_frame_id && !expect_new_frame )
+    {
+        data_ = data_to_commit_ ;
+        data_packet_count_ = 0 ;
+    }
+
+    return true ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_data_tracker_list( packet_t packet , const chunk_header & header )
+{
+    return decode_children( packet , header ,
+        [this]( packet_t packet , const chunk_header & child_header )
+        {
+            return decode_data_tracker( packet , child_header ) ;
+        } ) ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_data_tracker( packet_t packet , const chunk_header & header )
+{
+    tracker & tracker = data_to_commit_.trackers[ header.id ] ;
+    tracker = ::psn::tracker( header.id , info_.tracker_names[ header.id ] ) ;
+
+    return decode_children( packet , header ,
+        [&]( packet_t packet , const chunk_header & child_header )
+        {
+            bool success = true ;
+            switch( child_header.id )
+            {
+            case DATA_TRACKER_POS:       { float3 val ;   success = decode_type( packet , val ) ; tracker.set_pos( val ) ; break ; }
+            case DATA_TRACKER_SPEED:     { float3 val ;   success = decode_type( packet , val ) ; tracker.set_speed( val ) ; break ; }
+            case DATA_TRACKER_ORI:       { float3 val ;   success = decode_type( packet , val ) ; tracker.set_ori( val ) ; break ; }
+            case DATA_TRACKER_STATUS:    { float val ;    success = decode_type( packet , val ) ; tracker.set_status( val ) ; break ; }
+            case DATA_TRACKER_ACCEL:     { float3 val ;   success = decode_type( packet , val ) ; tracker.set_accel( val ) ; break ; }
+            case DATA_TRACKER_TRGTPOS:   { float3 val ;   success = decode_type( packet , val ) ; tracker.set_target_pos( val ) ; break ; }
+            case DATA_TRACKER_TIMESTAMP: { uint64_t val ; success = decode_type( packet , val ) ; tracker.set_timestamp( val ) ; break ; }
+            }
+            return success ;
+        } ) ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+template< typename type >
+bool
+psn_decoder::
+decode_type( packet_t packet , type & result )
+{
+    if ( auto data = packet.cast_to< const type >() )
+    {
+        result = *data ;
+        return true ;
+    }
+
+    return false ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_string( packet_t packet , const chunk_header & header , ::std::string & result )
+{
+    if ( header.data_len > packet.size )
+        return false ;
+
+    result.assign( packet.buffer , header.data_len ) ;
+    return true ;
+}
+
+//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+bool
+psn_decoder::
+decode_children( packet_t packet , const chunk_header & header , const decode_child_t & decode_child )
+{
+    size_t decoded_size = 0 ;
+
+    while( decoded_size < header.data_len )
+    {
+        auto child_header = packet.cast_to< const chunk_header >() ;
+
+        if ( !child_header )
+            return false ;
+
+        packet.apply_offset( sizeof( chunk_header ) ) ;
+
+        if ( !decode_child( packet , *child_header ) )
+            return false ;
+
+        packet.apply_offset( child_header->data_len ) ;
+        decoded_size += child_header->data_len + sizeof( chunk_header ) ;
     }
 
     return true ;

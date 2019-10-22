@@ -24,8 +24,6 @@
     <ClInclude Include="..\..\include\psn_defs.hpp" />
     <ClInclude Include="..\..\include\psn_encoder.hpp" />
     <ClInclude Include="..\..\include\psn_encoder_impl.hpp" />
-    <ClInclude Include="..\..\include\psn_generic.hpp" />
-    <ClInclude Include="..\..\include\psn_generic_impl.hpp" />
     <ClInclude Include="..\..\include\psn_lib.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

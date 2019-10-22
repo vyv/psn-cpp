@@ -1,147 +1,96 @@
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-/*
-The MIT License (MIT)
-
-Copyright (c) 2019 VYV Corporation
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
+/**
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2014 VYV Corporation
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+**/
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 #ifndef PSN_DECODER_HPP
 #define PSN_DECODER_HPP
 
-#include <psn_generic.hpp>
+#include "psn_defs.hpp"
+#include <algorithm>
+#include <functional>
 #include <map>
+#include <string>
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 namespace psn
 {
 
-class psn_data_tracker_list_chunk ;
-class psn_info_tracker_list_chunk ;
-
 class psn_decoder
 {
-  public :
+public:
+    struct info_t
+    {
+        packet_header header ;
+        ::std::string system_name ;
+        ::std::map< int , ::std::string > tracker_names ;
+    } ;
 
+    struct data_t
+    {
+        packet_header header ;
+        tracker_map trackers ;
+    } ;
+
+public :
     psn_decoder( void ) ;
-    ~psn_decoder( void ) ;
+
+    bool decode( const char * packet , size_t packet_size ) ;
+
+    const info_t & get_info( void ) const { return info_ ; }
+    const data_t & get_data( void ) const { return data_ ; }
+
+private:
+    typedef ::psn::packet< const char > packet_t ;
+    typedef ::std::function< bool( packet_t , const chunk_header & ) > decode_child_t ;
+
+    // Info packet
+    bool decode_info( packet_t packet , const chunk_header & header ) ;
+    bool decode_info_header( packet_t packet ) ;
+    bool decode_info_tracker_list( packet_t packet , const chunk_header & header ) ;
+    bool decode_info_tracker( packet_t packet , const chunk_header & header ) ;
+
+    // Data packet
+    bool decode_data( packet_t packet , const chunk_header & header ) ;
+    bool decode_data_header( packet_t packet ) ;
+    bool decode_data_tracker_list( packet_t packet , const chunk_header & header ) ;
+    bool decode_data_tracker( packet_t packet , const chunk_header & header ) ;
+
+    // Generic
+    template< typename type >
+    bool decode_type( packet_t packet , type & result ) ;
+    bool decode_string( packet_t packet , const chunk_header & header , ::std::string & result ) ;
+    bool decode_children( packet_t packet , const chunk_header & header , const decode_child_t & decode_child ) ;
+
+private:
+    size_t info_packet_count_ ;
+    info_t info_ ;
+    info_t info_to_commit_ ;
     
-    uint8_t get_last_decoded_frame_id( void ) const ;
-    const psn_tracker_array & get_trackers( void ) const ;
-
-    bool get_psn_server_name( ::std::string & server_name ) ;
-
-    bool decode( const ::std::string & packet ) ;
-
-  private : 
-
-    bool decode_data_packet( void * buffer , size_t buffer_size ) ;
-    bool decode_info_packet( void * buffer , size_t buffer_size ) ;
-
-  private :
-    
-    psn_chunk                        * psn_data_packet_ ;
-    psn_chunk                        * psn_data_packet_header_ ;
-    psn_data_tracker_list_chunk      * psn_data_tracker_list_ ;
-
-    psn_chunk                        * psn_info_packet_ ;
-    psn_chunk                        * psn_info_packet_header_ ;
-    psn_chunk                        * psn_info_system_name_ ;
-    psn_info_tracker_list_chunk      * psn_info_tracker_list_ ;
-
-  private :
-
-    psn_tracker_array                        trackers_ ;
-    psn_tracker_array                        frame_trackers_ ; // temporary trackers until frame is completely decoded.
-
-    ::std::map< uint16_t , ::std::string >   trackers_info_ ; // keep the trackers info in a map
-
-    uint8_t                                  last_frame_id_ ;
-    uint8_t                                  frame_packet_counter_ ;
-
-} ;
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-class psn_data_tracker_list_chunk : public psn_chunk
-{
-  public :
-
-    psn_data_tracker_list_chunk( uint16_t id , psn_chunk_data * data = 0 , const ::std::string & name = "" )
-        : psn_chunk( id , data , name ) 
-    {} 
-
-    virtual ~psn_data_tracker_list_chunk( void )
-    {}
-
-  protected :
-
-    // re-implement decode_child for PSN_DATA_TRACKER_LIST chunk
-    // on decode_child, it will automatically add its own child
-    virtual bool decode_child( uint16_t child_id , void * buffer , size_t buffer_size ) 
-    {
-        if ( get_child_by_id( child_id ) == 0 )
-        {
-            psn_chunk * psn_data_tracker = new psn_chunk( child_id , 0 , "PSN_DATA_TRACKER" ) ;
-
-            psn_data_tracker->add_child( new psn_chunk( PSN_DATA_TRACKER_POS    , new psn_vec3_data()            , "PSN_DATA_TRACKER_POS" ) ) ;
-            psn_data_tracker->add_child( new psn_chunk( PSN_DATA_TRACKER_SPEED  , new psn_vec3_data()            , "PSN_DATA_TRACKER_SPEED" ) ) ;
-            psn_data_tracker->add_child( new psn_chunk( PSN_DATA_TRACKER_ORI    , new psn_vec3_data()            , "PSN_DATA_TRACKER_ORI" ) ) ;
-            psn_data_tracker->add_child( new psn_chunk( PSN_DATA_TRACKER_STATUS , new psn_tracker_status_data()  , "PSN_DATA_TRACKER_STATUS" ) ) ;
-
-            add_child( psn_data_tracker ) ;
-        }
-
-        return psn_chunk::decode_child( child_id , buffer , buffer_size ) ;
-    }
-} ;
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-class psn_info_tracker_list_chunk : public psn_chunk
-{
-  public :
-
-    psn_info_tracker_list_chunk( uint16_t id , psn_chunk_data * data = 0 , const ::std::string & name = "" )
-        : psn_chunk( id , data , name ) 
-    {} 
-
-    virtual ~psn_info_tracker_list_chunk( void )
-    {}
-
-  protected :
-
-    // re-implement decode_child for PSN_INFO_TRACKER_LIST chunk
-    // on decode_child, it will automatically add its own child
-    virtual bool decode_child( uint16_t child_id , void * buffer , size_t buffer_size ) 
-    {
-        if ( get_child_by_id( child_id ) == 0 )
-        {
-            psn_chunk * psn_info_tracker = new psn_chunk( child_id , 0 , "PSN_INFO_TRACKER" ) ;
-
-            psn_info_tracker->add_child( new psn_chunk( PSN_INFO_TRACKER_NAME , new psn_name_data() , "PSN_INFO_TRACKER_NAME" ) ) ;
-
-            add_child( psn_info_tracker ) ;
-        }
-
-        return psn_chunk::decode_child( child_id , buffer , buffer_size ) ;
-    }
+    size_t data_packet_count_ ;
+    data_t data_ ;
+    data_t data_to_commit_ ;
 } ;
 
 } // namespace psn

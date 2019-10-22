@@ -175,9 +175,6 @@
   <ItemGroup>
     <ClCompile Include="psn_glut_client.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="psn_glut_client.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

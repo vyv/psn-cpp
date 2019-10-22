@@ -2,11 +2,23 @@
 Change Log
 ===============================================
 
+Version 2.03 - 2019-10-22
+
+- Improvements:
+  - Added a new tracker data chunk to encode a timestamp per tracker.
+  - Added flags to trackers to know which chunk have been received
+    and to avoid transmitted properties that have not been set.
+  - Rewrote the whole implementation to simplify its usage and to
+    lower its computational time by reduce memory allocation and copy.
+    Warning: The interface changed. You might need to adapt calls to
+             the library if you update from a previous version. However,
+             the changes should be straightforward.
+
 Version 2.02 - 2018-01-03
 ===============================================
 
 - Bug: 
-  - Description: psn_tracker class constructor was always setting its member 'validity' to 0, ignoring the given parameter
+  - Description: psn_tracker class constructor always was setting its member 'validity' to 0, ignoring the given parameter
   - Fix: The constructor now uses the given parameter to initialize the member 'validity'.
 - Bug:
   - Description: The frame_id needed to be sequential. If not, a frame could be lost when reconstructing frame packets.

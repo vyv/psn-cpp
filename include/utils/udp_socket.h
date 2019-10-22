@@ -2,7 +2,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019 VYV Corporation
+Copyright (c) 2014 VYV Corporation
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,10 @@ THE SOFTWARE.
 
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
+
+#pragma message("Note: including lib: Ws2_32.lib") 
+#pragma comment(lib, "Ws2_32.lib")
+
 #include <string>
 
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
