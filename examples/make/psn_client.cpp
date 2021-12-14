@@ -35,7 +35,7 @@
 #include <thread>
 
 const short           PORT         = 8888;
-static const short    BUFLEN       = 512;
+static const short    BUFLEN       = 1024;
 static const uint32_t TIMEOUT_MSEC = 1000;
 
 int main( void )
