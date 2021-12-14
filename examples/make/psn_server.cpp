@@ -117,11 +117,20 @@ int main( void )
                 std::cout << "Send:" << it->c_str() << " of length " << it->length() << std::endl;
 
                 // void* buf;
-                std::string s (it->c_str());
-                std::cout << "Converted? " << s << std::endl;
+                // std::string s (it->c_str());
+                // std::cout << "Converted? " << s << std::endl;
                 // buf = static_cast<void *>(&s);
                 // client.sendData(buf, it->length());
-                client.sendData(&s, s.length());
+
+
+                char buf[it->length()];
+                for (int i = 0; i < it->length(); i++) {
+                  // std::cout << "#" << i << " : " << (uint)it->c_str()[i] << std::endl;
+                  buf[i] = it->c_str()[i];
+                }
+
+
+                client.sendData(buf, it->length());
 
             }
 

@@ -79,10 +79,9 @@ int main( void )
             printf("Data: %s\n", buf);
             // server.sendData(buf, strlen(buf));
 
-            ::std::string msg (buf);
-            std::cout << "As string: " << msg << std::endl;
+            // std::cout << "As string: " << msg << " with size " << msg.size() << std::endl;
             
-            psn_decoder.decode( msg.data() , msg.size() ) ;
+            psn_decoder.decode( buf , BUFLEN ) ;
 
             // if ( psn_decoder.get_data().header.frame_id != last_frame_id )
             // {
