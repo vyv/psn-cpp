@@ -73,12 +73,11 @@ int main( void )
             printf("Data: %s\n", buf);
             // server.sendData(buf, strlen(buf));
 
-// Update Client
-        ::std::string msg (buf);
+            ::std::string msg (buf);
             psn_decoder.decode( msg.data() , msg.size() ) ;
 
-            if ( psn_decoder.get_data().header.frame_id != last_frame_id )
-            {
+            // if ( psn_decoder.get_data().header.frame_id != last_frame_id )
+            // {
                 last_frame_id = psn_decoder.get_data().header.frame_id ;
 
                 const ::psn::tracker_map & recv_trackers = psn_decoder.get_data().trackers ;
@@ -131,7 +130,9 @@ int main( void )
 
                     ::std::cout << "-----------------------------------------------" << ::std::endl ;
                 }
-            }
+            // } else {
+            //   ::std::cout << "Error?" << ::std::endl;
+            // }
 
         }
 
