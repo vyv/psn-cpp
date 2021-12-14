@@ -32,6 +32,8 @@
 #include <list>
 #include <string>
 #include <stdio.h>
+#include <chrono>
+#include <thread>
 
 const char * HOST = "127.0.0.1";
 const short  PORT = 8888;
@@ -93,11 +95,14 @@ int main( void )
         // Send data
         if ( timestamp % 16 == 0 ) // transmit data at 60 Hz approx.
         {
+            std::cout << "timestamp = " << timestamp << std::endl;
+
             ::std::list< ::std::string > data_packets = psn_encoder.encode_data( trackers , timestamp ) ;
 
             ::std::cout << "--------------------PSN SERVER-----------------" << ::std::endl ;
             ::std::cout << "Sending PSN_DATA_PACKET : " 
-                        << "Frame Id = " << (int)psn_encoder.get_last_data_frame_id()
+                        << "Frame Id = " << (int)psn_encoder.get_last_data_frame_id() << std::endl
+                        << "Tracker count = " << (int)trackers.size()
                         << " , Packet Count = " << data_packets.size() << ::std::endl ;
 
             for ( auto it = data_packets.begin() ; it != data_packets.end() ; ++it )
@@ -108,9 +113,15 @@ int main( void )
 
                 
                     // socket_server.send_message( ::psn::DEFAULT_UDP_MULTICAST_ADDR , ::psn::DEFAULT_UDP_PORT , *it ) ;
-                char message[it->length()];
-                strcpy(message, it->c_str());
-                client.sendData(message, it->length());
+
+                std::cout << "Send:" << it->c_str() << " of length " << it->length() << std::endl;
+
+                // void* buf;
+                std::string s (it->c_str());
+                std::cout << "Converted? " << s << std::endl;
+                // buf = static_cast<void *>(&s);
+                // client.sendData(buf, it->length());
+                client.sendData(&s, s.length());
 
             }
 
@@ -135,7 +146,8 @@ int main( void )
             ::std::cout << "-----------------------------------------------" << ::std::endl ;
         }
 
-        sleep( 1000 ) ;
+        // sleep( 1  ) ;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1) );
         timestamp++ ;    
     }
 

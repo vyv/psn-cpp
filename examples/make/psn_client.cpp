@@ -31,6 +31,8 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 
 const short           PORT         = 8888;
 static const short    BUFLEN       = 512;
@@ -59,6 +61,10 @@ int main( void )
     while ( 1 ) 
     {
         // Sleep( 1 ) ;
+        // sleep(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1) );
+
+
 
         printf("Waiting for data...");
         fflush(stdout);
@@ -74,6 +80,8 @@ int main( void )
             // server.sendData(buf, strlen(buf));
 
             ::std::string msg (buf);
+            std::cout << "As string: " << msg << std::endl;
+            
             psn_decoder.decode( msg.data() , msg.size() ) ;
 
             // if ( psn_decoder.get_data().header.frame_id != last_frame_id )
@@ -82,8 +90,8 @@ int main( void )
 
                 const ::psn::tracker_map & recv_trackers = psn_decoder.get_data().trackers ;
                 
-                if ( skip_cout++ % 20 == 0 )
-                {
+                // if ( skip_cout++ % 20 == 0 )
+                // {
                     ::std::cout << "--------------------PSN CLIENT-----------------" << ::std::endl ;
                     ::std::cout << "System Name: " << psn_decoder.get_info().system_name << ::std::endl ;
                     ::std::cout << "Frame Id: " << (int)last_frame_id << ::std::endl ;
@@ -129,16 +137,14 @@ int main( void )
                     }
 
                     ::std::cout << "-----------------------------------------------" << ::std::endl ;
-                }
-            // } else {
-            //   ::std::cout << "Error?" << ::std::endl;
-            // }
+                //} // skip
 
         }
 
         else {
             printf("\n");
-            sleep(1);
+            // sleep(1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1) );
         }
 
 
