@@ -25,7 +25,7 @@
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 #include <psn_lib.hpp>
-#include "sockets/UdpServerSocket.hpp"
+#include "UdpServerSocket.hpp"
 
 #include <iostream>
 

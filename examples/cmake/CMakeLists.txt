@@ -1,5 +1,14 @@
+cmake_minimum_required(VERSION 3.19)
 project (psn_cpp_examples)
 
 add_executable(send_example psn_server.cpp)
+add_executable(receive_example psn_client.cpp)
 
-target_include_directories(sockets)
+set_property(TARGET send_example PROPERTY CXX_STANDARD 11)
+set_property(TARGET receive_example PROPERTY CXX_STANDARD 11)
+
+target_include_directories(send_example PUBLIC ../../include)
+target_include_directories(send_example PUBLIC ./CppSockets)
+
+target_include_directories(receive_example PUBLIC ../../include)
+target_include_directories(receive_example PUBLIC ./CppSockets)

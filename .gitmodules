@@ -1,0 +1,3 @@
+[submodule "examples/cmake/CppSockets"]
+	path = examples/cmake/CppSockets
+	url = https://github.com/simondlevy/CppSockets.git
