@@ -9,3 +9,4 @@ examples/vs2015/bin/
 examples/vs2015/build/
 .vs/
 *.gch
+build
