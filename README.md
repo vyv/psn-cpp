@@ -14,6 +14,41 @@ This package contains the documentation and a C++ implementation of the protocol
 
 The implementation only uses ".hpp" files. If you want to use this implementation in your project, you need to include the file "psn_lib.hpp" in one of your ".cpp" file.  
 
-The implementation is cross-platform so it should compile under Windows, Linux and Mac OS X. In revenge, the example projects will only work under a Windows operating system as they use a Windows specific implementation of a simple udp_socket class. If you want to run these demo on another platform, you will need to write your own udp_socket class.
+The implementation is cross-platform so it should compile under Windows, Linux and Mac OS X. 
 
 For any question about the protocol, please write at **info@posistage.net**
+
+## CMake compilation
+You can compile the library and the examples using CMake (for Windows, MacOS and Linux)
+- `git submodule update --init --recursive` (fetches the CppSockets library from https://github.com/simondlevy/CppSockets - only required for the examples to work; otherwise bring your own socket library)
+- `mkdir build`
+- `cd build`
+- `cmake ..`
+- `cmake --build .`
+
+Now you should be example to run examples as follows:
+- `./examples/cmake/send_example` : encode and send PSN messages using UDP ("PSN Server")
+- `./examples/cmake/receive_example` : receive PSN messages via UDP and decode ("PSN Client")
+
+## Installing this library using CMake
+To install this library in your own CMake-based project, you could use a `CMakeList.txt` similar to the following, assuming you copied or cloned psn-cpp to a directory named `./libs/psn-cpp` relative to the project root:
+```
+cmake_minimum_required(VERSION 3.19)
+
+project(my_project)
+
+# --- Optional: add CppSockets library if you need it
+add_library(cppsockets INTERFACE)
+set_property(TARGET cppsockets PROPERTY CXX_STANDARD 11)
+target_include_directories(cppsockets INTERFACE ./libs/CppSockets)
+# ----
+
+add_executable(my_executable src/my_executable.cpp)
+set_property(TARGET my_executable PROPERTY CXX_STANDARD 11)
+
+add_subdirectory(./libs/psn-cpp)
+
+target_include_directories(my_executable PUBLIC ./libs/tether/base_agent/cpp/src)
+
+target_link_libraries(my_executable PUBLIC psnlib cppsockets)
+```
