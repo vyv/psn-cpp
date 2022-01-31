@@ -50,6 +50,7 @@ int main( void )
 // Init client
     //Socket used to receive, the "endpoint" is where to listen to data
     kn::udp_socket b_socket(kn::endpoint("0.0.0.0", 56565));
+    b_socket.set_multicast();
     b_socket.bind();
 
     // UdpServerSocket server(PORT, TIMEOUT_MSEC);
@@ -82,7 +83,7 @@ int main( void )
         kn::buffer<1024> recv_buff;
 
         //Actually print bytes_available
-		std::cout << "avaliable in UDP socket : " << b_socket.bytes_available() << " bytes\n";
+		std::cout << "available in UDP socket : " << b_socket.bytes_available() << " bytes\n";
 
 		//You receive in the same way
 		auto [received_bytes, status] = b_socket.recv(recv_buff);

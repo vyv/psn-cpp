@@ -52,11 +52,11 @@ int main( void )
     // UdpClientSocket client(HOST, PORT);
     
     //Socket used to send, the "endpoint" is the destination of the data
-    kn::udp_socket a_socket(kn::endpoint("127.0.0.1", 56565));
+    kn::udp_socket a_socket(kn::endpoint("192.168.11.201", 56565));
 
     //Byte buffer
     kn::buffer<16> buff;
-
+    
     //Build data to send (flat array of bytes
     for(unsigned char i = 0; i < 16; i++)
         buff[i] = std::byte{ i };
