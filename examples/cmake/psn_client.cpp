@@ -42,7 +42,7 @@ namespace kn = kissnet;
 
 int main( void )
 {
-     char buf[BUFLEN];
+     char char_buf[BUFLEN];
     // wsa_session session ;
 
 
@@ -79,100 +79,104 @@ int main( void )
         printf("Waiting for data...");
         fflush(stdout);
 
-        // memset(buf, 0, BUFLEN);
+        memset(char_buf, 0, BUFLEN);
 
-        // *buf = 0;
+        *char_buf = 0;
 
         // server.receiveData(buf, BUFLEN);
 
         //Actually print bytes_available
-		std::cout << "available in UDP socket : " << mcast_listen_socket.bytes_available() << " bytes\n";
+		// std::cout << "available in UDP socket : " << mcast_listen_socket.bytes_available() << " bytes\n";
 
 		//You receive in the same way
 		auto [received_bytes, status] = mcast_listen_socket.recv(recv_buff);
 		const auto from = mcast_listen_socket.get_recv_endpoint();
 
 		//Print the data
-		std::cout << "Received: ";
+		std::cout << "Received" << received_bytes << " bytes";
 
-		for(unsigned char i = 0; i < 16; i++)
-		{
-			std::cout << std::hex << std::to_integer<int>(recv_buff[i]) << std::dec << ' ';
-		}
+		// for(unsigned char i = 0; i < 16; i++)
+		// {
+		// 	std::cout << std::hex << std::to_integer<int>(recv_buff[i]) << std::dec << ' ';
+		// }
 
 		//Print who send the data
-		std::cout << "From: " << from.address << ' ' << from.port << '\n';
+		std::cout << " from: " << from.address << ':' << from.port << '\n';
 
-        // if (recv_buff) {
-        //     printf("Data: %s\n", buf);
-        //     // server.sendData(buf, strlen(buf));
+        if (received_bytes > 0) {
+            // printf("Data: %s\n", recv_buff);
+            // server.sendData(buf, strlen(buf));
 
-        //     // std::cout << "As string: " << msg << " with size " << msg.size() << std::endl;
+            // std::cout << "As string: " << msg << " with size " << msg.size() << std::endl;
+            for (int i = 0; i < received_bytes; i++) {
+                char_buf[i] = (char) recv_buff[i];
+            }
+            // std::cout << "converted:" << char_buf << " . \n";
             
-        //     psn_decoder.decode( buf , BUFLEN ) ;
+            psn_decoder.decode( char_buf , BUFLEN ) ;
 
-        //     // if ( psn_decoder.get_data().header.frame_id != last_frame_id )
-        //     // {
-        //         last_frame_id = psn_decoder.get_data().header.frame_id ;
+            // if ( psn_decoder.get_data().header.frame_id != last_frame_id )
+            // {
+                last_frame_id = psn_decoder.get_data().header.frame_id ;
 
-        //         const ::psn::tracker_map & recv_trackers = psn_decoder.get_data().trackers ;
+                const ::psn::tracker_map & recv_trackers = psn_decoder.get_data().trackers ;
                 
-        //         // if ( skip_cout++ % 20 == 0 )
-        //         // {
-        //             ::std::cout << "--------------------PSN CLIENT-----------------" << ::std::endl ;
-        //             ::std::cout << "System Name: " << psn_decoder.get_info().system_name << ::std::endl ;
-        //             ::std::cout << "Frame Id: " << (int)last_frame_id << ::std::endl ;
-        //             ::std::cout << "Frame Timestamp: " << psn_decoder.get_data().header.timestamp_usec << ::std::endl ;
-        //             ::std::cout << "Tracker count: " << recv_trackers.size() << ::std::endl ;
+                // if ( skip_cout++ % 20 == 0 )
+                // {
+                    ::std::cout << "--------------------PSN CLIENT-----------------" << ::std::endl ;
+                    ::std::cout << "System Name: " << psn_decoder.get_info().system_name << ::std::endl ;
+                    ::std::cout << "Frame Id: " << (int)last_frame_id << ::std::endl ;
+                    ::std::cout << "Frame Timestamp: " << psn_decoder.get_data().header.timestamp_usec << ::std::endl ;
+                    ::std::cout << "Tracker count: " << recv_trackers.size() << ::std::endl ;
 
-        //             for ( auto it = recv_trackers.begin() ; it != recv_trackers.end() ; ++it )
-        //             {
-        //                 const ::psn::tracker & tracker = it->second ;
+                    for ( auto it = recv_trackers.begin() ; it != recv_trackers.end() ; ++it )
+                    {
+                        const ::psn::tracker & tracker = it->second ;
 
-        //                 ::std::cout << "Tracker - id: " << tracker.get_id() << " | name: " << tracker.get_name() << ::std::endl ;
+                        ::std::cout << "Tracker - id: " << tracker.get_id() << " | name: " << tracker.get_name() << ::std::endl ;
 
-        //                 if ( tracker.is_pos_set() )
-        //                     ::std::cout << "    pos: " << tracker.get_pos().x << ", " << 
-        //                                                   tracker.get_pos().y << ", " <<
-        //                                                   tracker.get_pos().z << std::endl ;
+                        if ( tracker.is_pos_set() )
+                            ::std::cout << "    pos: " << tracker.get_pos().x << ", " << 
+                                                          tracker.get_pos().y << ", " <<
+                                                          tracker.get_pos().z << std::endl ;
 
-        //                 if ( tracker.is_speed_set() )
-        //                     ::std::cout << "    speed: " << tracker.get_speed().x << ", " << 
-        //                                                     tracker.get_speed().y << ", " <<
-        //                                                     tracker.get_speed().z << std::endl ;
+                        if ( tracker.is_speed_set() )
+                            ::std::cout << "    speed: " << tracker.get_speed().x << ", " << 
+                                                            tracker.get_speed().y << ", " <<
+                                                            tracker.get_speed().z << std::endl ;
 
-        //                 if ( tracker.is_ori_set() )
-        //                     ::std::cout << "    ori: " << tracker.get_ori().x << ", " << 
-        //                                                   tracker.get_ori().y << ", " <<
-        //                                                   tracker.get_ori().z << std::endl ;
+                        if ( tracker.is_ori_set() )
+                            ::std::cout << "    ori: " << tracker.get_ori().x << ", " << 
+                                                          tracker.get_ori().y << ", " <<
+                                                          tracker.get_ori().z << std::endl ;
 
-        //                 if ( tracker.is_status_set() )
-        //                     ::std::cout << "    status: " << tracker.get_status() << std::endl ;
+                        if ( tracker.is_status_set() )
+                            ::std::cout << "    status: " << tracker.get_status() << std::endl ;
 
-        //                 if ( tracker.is_accel_set() )
-        //                     ::std::cout << "    accel: " << tracker.get_accel().x << ", " << 
-        //                                                     tracker.get_accel().y << ", " <<
-        //                                                     tracker.get_accel().z << std::endl ;
+                        if ( tracker.is_accel_set() )
+                            ::std::cout << "    accel: " << tracker.get_accel().x << ", " << 
+                                                            tracker.get_accel().y << ", " <<
+                                                            tracker.get_accel().z << std::endl ;
 
-        //                 if ( tracker.is_target_pos_set() )
-        //                     ::std::cout << "    target pos: " << tracker.get_target_pos().x << ", " << 
-        //                                                          tracker.get_target_pos().y << ", " <<
-        //                                                          tracker.get_target_pos().z << std::endl ;
+                        if ( tracker.is_target_pos_set() )
+                            ::std::cout << "    target pos: " << tracker.get_target_pos().x << ", " << 
+                                                                 tracker.get_target_pos().y << ", " <<
+                                                                 tracker.get_target_pos().z << std::endl ;
 
-        //                 if ( tracker.is_timestamp_set() )
-        //                     ::std::cout << "    timestamp: " << tracker.get_timestamp() << std::endl ;
-        //             }
+                        if ( tracker.is_timestamp_set() )
+                            ::std::cout << "    timestamp: " << tracker.get_timestamp() << std::endl ;
+                    }
 
-        //             ::std::cout << "-----------------------------------------------" << ::std::endl ;
-        //         //} // skip
+                    ::std::cout << "-----------------------------------------------" << ::std::endl ;
+                //} // skip
 
-        // }
+        }
 
-        // else {
-        //     printf("\n");
-        //     // sleep(1);
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(1) );
-        // }
+        else {
+            printf("\n");
+            // sleep(1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1) );
+        }
 
 
 
@@ -180,7 +184,6 @@ int main( void )
         // {
 
         
-        // }
         std::this_thread::sleep_for(std::chrono::milliseconds(1) );
 
     }
