@@ -43,24 +43,14 @@ namespace kn = kissnet;
 int main( void )
 {
      char char_buf[BUFLEN];
-    // wsa_session session ;
 
-
-//====================================================
-// Init client
-    //Socket used to receive, the "endpoint" is where to listen to data
-    // kn::udp_socket b_socket(kn::endpoint("0.0.0.0", 56565));
+    //====================================================
+    // Init "client" (RECEIVE)
 
     auto mcast_listen_socket = kissnet::udp_socket();
 	mcast_listen_socket.join(kissnet::endpoint("236.10.10.10", 56565));
     
     kn::buffer<1024> recv_buff;
-
-
-    // UdpServerSocket server(PORT, TIMEOUT_MSEC);
-    // udp_socket socket_client ;
-    // socket_client.bind( ::psn::DEFAULT_UDP_PORT ) ;
-    // socket_client.join_multicast_group( ::psn::DEFAULT_UDP_MULTICAST_ADDR ) ;
 
     ::psn::psn_decoder psn_decoder ;
     uint8_t last_frame_id = 0 ;
@@ -70,11 +60,7 @@ int main( void )
     // Main loop
     while ( 1 ) 
     {
-        // Sleep( 1 ) ;
-        // sleep(1);
         std::this_thread::sleep_for(std::chrono::milliseconds(1) );
-
-
 
         printf("Waiting for data...");
         fflush(stdout);
@@ -83,35 +69,16 @@ int main( void )
 
         *char_buf = 0;
 
-        // server.receiveData(buf, BUFLEN);
-
-        //Actually print bytes_available
-		// std::cout << "available in UDP socket : " << mcast_listen_socket.bytes_available() << " bytes\n";
-
-		//You receive in the same way
 		auto [received_bytes, status] = mcast_listen_socket.recv(recv_buff);
 		const auto from = mcast_listen_socket.get_recv_endpoint();
 
-		//Print the data
-		std::cout << "Received" << received_bytes << " bytes";
-
-		// for(unsigned char i = 0; i < 16; i++)
-		// {
-		// 	std::cout << std::hex << std::to_integer<int>(recv_buff[i]) << std::dec << ' ';
-		// }
-
-		//Print who send the data
+		std::cout << "Received " << received_bytes << " bytes";
 		std::cout << " from: " << from.address << ':' << from.port << '\n';
 
         if (received_bytes > 0) {
-            // printf("Data: %s\n", recv_buff);
-            // server.sendData(buf, strlen(buf));
-
-            // std::cout << "As string: " << msg << " with size " << msg.size() << std::endl;
             for (int i = 0; i < received_bytes; i++) {
                 char_buf[i] = (char) recv_buff[i];
             }
-            // std::cout << "converted:" << char_buf << " . \n";
             
             psn_decoder.decode( char_buf , BUFLEN ) ;
 
