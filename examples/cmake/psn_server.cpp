@@ -42,6 +42,9 @@ namespace kn = kissnet;
 
 int main( void )
 {
+    //====================================================
+    // Init "server" (SENDs)
+
     kissnet::udp_socket mcast_send_socket(kissnet::endpoint("236.10.10.10", 56565));
     std::cout << "init socket OK" << std::endl;
 
