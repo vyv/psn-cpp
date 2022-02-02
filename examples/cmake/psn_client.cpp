@@ -76,9 +76,8 @@ int main( void )
 		std::cout << " from: " << from.address << ':' << from.port << '\n';
 
         if (received_bytes > 0) {
-            for (int i = 0; i < received_bytes; i++) {
-                char_buf[i] = (char) recv_buff[i];
-            }
+
+            std::memcpy(char_buf, recv_buff.data(), received_bytes);
             
             psn_decoder.decode( char_buf , BUFLEN ) ;
 
