@@ -42,26 +42,8 @@ namespace kn = kissnet;
 
 int main( void )
 {
-    // wsa_session session ;
-
-    //====================================================
-    // Init server
-    // udp_socket socket_server ;
-    // socket_server.enable_send_message_multicast() ;
-
-    // UdpClientSocket client(HOST, PORT);
-    
     kissnet::udp_socket mcast_send_socket(kissnet::endpoint("236.10.10.10", 56565));
-
-    // //Build data to send (flat array of bytes
-    // for(unsigned char i = 0; i < 16; i++)
-    //     buff[i] = std::byte{ i };
-
-    // //Send data
-    // // mcast_send_socket(buff.data(), 16);
-    // auto[sent_bytes, status] = mcast_send_socket.send(buff.data(), sizeof(buff.data()));
-
-    std::cout << "OK" << std::endl;
+    std::cout << "init socket OK" << std::endl;
 
     ::psn::psn_encoder psn_encoder( "Test PSN Server" ) ;
 
@@ -121,43 +103,16 @@ int main( void )
 
             for ( auto it = data_packets.begin() ; it != data_packets.end() ; ++it )
             {
-                // Uncomment these lines if you want to simulate a packet drop now and then
-                /*static uint64_t packet_drop = 0 ;
-                if ( packet_drop++ % 100 != 0 )*/
-
-                
-                    // socket_server.send_message( ::psn::DEFAULT_UDP_MULTICAST_ADDR , ::psn::DEFAULT_UDP_PORT , *it ) ;
-
                 std::cout << "Send: PSN data of length " << it->length() << std::endl;
 
-                // void* buf;
-                // std::string s (it->c_str());
-                // std::cout << "Converted? " << s << std::endl;
-                // buf = static_cast<void *>(&s);
-                // client.sendData(buf, it->length());
-
-
-                // char buf[it->length()];
-
-                // for (int i = 0; i < it->length(); i++) {
-                //   // std::cout << "#" << i << " : " << (uint)it->c_str()[i] << std::endl;
-                // //   buff[i] = it->c_str()[i];
-                //     buff[i] = std::byte{ (std::byte)it->c_str()[i] };
-                // }
-
                 kn::buffer<1024> buff;
-                // std::memcpy(buff.data(), it->c_str(), it->size());
-                for (int i = 0; i < it->length(); i++) {
-                    buff[i] = std::byte { (std::byte) it->c_str()[i] };
-                    std::cout << i << ",";
-                }
-                std::cout << "\n";
+                std::memcpy(buff.data(), it->c_str(), it->size());
 
 
-                // client.sendData(buf, it->length());
-                std::cout << "Size to send: " << buff.size() << "/" << sizeof(buff.data()) << "/" << it->size() << "\n";
+                // std::cout << "Size to send: " << buff.size() << "/" << sizeof(buff.data()) << "/" << it->size() << "\n";
                 auto[sent_bytes, status] = mcast_send_socket.send(
-                    buff.data(), it->length()
+                    buff.data(), 
+                    it->length() // do not use sizeof(buff.data()), because null-term chars will confuse matters!
                 );
                 std::cout <<"Sent " << sent_bytes << ", status=" << status << "\n"; 
 
@@ -177,15 +132,19 @@ int main( void )
                         << "Frame Id = " << (int)psn_encoder.get_last_info_frame_id()
                         << " , Packet Count = " << info_packets.size() << ::std::endl ;
    
-            for ( auto it = info_packets.begin() ; it != info_packets.end() ; ++it )
-              // TODO: send info packet using client.sendData
-                // socket_server.send_message( ::psn::DEFAULT_UDP_MULTICAST_ADDR , ::psn::DEFAULT_UDP_PORT , *it ) ;
+            for ( auto it = info_packets.begin() ; it != info_packets.end() ; ++it ) {
+                kn::buffer<1024> buff;
+                std::memcpy(buff.data(), it->c_str(), it->size());
+                auto[sent_bytes, status] = mcast_send_socket.send(
+                    buff.data(), 
+                    it->length() // do not use sizeof(buff.data()), because null-term chars will confuse matters!
+                );
+            }
 
 
             ::std::cout << "-----------------------------------------------" << ::std::endl ;
         }
 
-        // sleep( 1  ) ;
         std::this_thread::sleep_for(std::chrono::milliseconds(1) );
         timestamp++ ;    
     }
