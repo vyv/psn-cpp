@@ -51,18 +51,18 @@ int main( void )
 
     // UdpClientSocket client(HOST, PORT);
     
-    //Socket used to send, the "endpoint" is the destination of the data
-    kn::udp_socket a_socket(kn::endpoint("192.168.11.201", 56565));
+    kissnet::udp_socket mcast_send_socket(kissnet::endpoint("236.10.10.10", 56565));
 
     //Byte buffer
-    kn::buffer<16> buff;
-    
+    kn::buffer<1024> buff;
+
     //Build data to send (flat array of bytes
     for(unsigned char i = 0; i < 16; i++)
         buff[i] = std::byte{ i };
 
     //Send data
-    a_socket.send(buff.data(), 16);
+    // mcast_send_socket(buff.data(), 16);
+    auto[sent_bytes, status] = mcast_send_socket.send(buff.data(), sizeof(buff.data()));
 
     std::cout << "OK" << std::endl;
 

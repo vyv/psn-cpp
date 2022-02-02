@@ -49,9 +49,13 @@ int main( void )
 //====================================================
 // Init client
     //Socket used to receive, the "endpoint" is where to listen to data
-    kn::udp_socket b_socket(kn::endpoint("0.0.0.0", 56565));
-    b_socket.set_multicast();
-    b_socket.bind();
+    // kn::udp_socket b_socket(kn::endpoint("0.0.0.0", 56565));
+
+    auto mcast_listen_socket = kissnet::udp_socket();
+	mcast_listen_socket.join(kissnet::endpoint("236.10.10.10", 56565));
+    
+    kn::buffer<1024> recv_buff;
+
 
     // UdpServerSocket server(PORT, TIMEOUT_MSEC);
     // udp_socket socket_client ;
@@ -80,14 +84,13 @@ int main( void )
         // *buf = 0;
 
         // server.receiveData(buf, BUFLEN);
-        kn::buffer<1024> recv_buff;
 
         //Actually print bytes_available
-		std::cout << "available in UDP socket : " << b_socket.bytes_available() << " bytes\n";
+		std::cout << "available in UDP socket : " << mcast_listen_socket.bytes_available() << " bytes\n";
 
 		//You receive in the same way
-		auto [received_bytes, status] = b_socket.recv(recv_buff);
-		const auto from = b_socket.get_recv_endpoint();
+		auto [received_bytes, status] = mcast_listen_socket.recv(recv_buff);
+		const auto from = mcast_listen_socket.get_recv_endpoint();
 
 		//Print the data
 		std::cout << "Received: ";
