@@ -1,0 +1,3 @@
+[submodule "examples/cmake/kissnet"]
+	path = examples/cmake/kissnet
+	url = https://github.com/andersc/kissnet.git
