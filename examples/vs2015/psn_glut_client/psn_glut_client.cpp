@@ -39,9 +39,24 @@
 #include <windows.h>
 #endif
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+// Platform-specific sleep function
+#ifdef _WIN32
+    #define SLEEP_MS(ms) Sleep(ms)
+#else
+    #include <unistd.h>
+    #define SLEEP_MS(ms) usleep((ms) * 1000)
+#endif
+
+// Platform-specific OpenGL headers
+#ifdef __APPLE__
+    #include <OpenGL/gl.h>
+    #include <OpenGL/glu.h>
+    #include <GLUT/glut.h>
+#else
+    #include <GL/gl.h>
+    #include <GL/glu.h>
+    #include <GL/glut.h>
+#endif
 
 #define PI_DEF   3.1415926535897932384626433832795f
 
@@ -261,7 +276,7 @@ idle( void )
         ::std::cout << "\n-----------------------------------------------" << ::std::endl ;
     }
 
-    Sleep( 10 ) ; 
+    SLEEP_MS( 10 ) ;
 
     // schedule GL update
     glutPostRedisplay() ;

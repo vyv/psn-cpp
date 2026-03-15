@@ -30,7 +30,15 @@
 
 #include <iostream>
 
-void main( void )
+// Platform-specific sleep function
+#ifdef _WIN32
+    #define SLEEP_MS(ms) Sleep(ms)
+#else
+    #include <unistd.h>
+    #define SLEEP_MS(ms) usleep((ms) * 1000)
+#endif
+
+int main( void )
 {
     wsa_session session ;
 
@@ -46,9 +54,9 @@ void main( void )
 
     //====================================================
     // Main loop
-    while ( 1 ) 
+    while ( 1 )
     {
-        Sleep( 1 ) ;
+        SLEEP_MS( 1 ) ;
 
         // Update Client
         ::std::string msg ;
@@ -114,6 +122,6 @@ void main( void )
             }
         }
     }
+
+    return 0 ;
 }
-
-

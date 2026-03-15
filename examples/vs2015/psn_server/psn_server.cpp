@@ -31,7 +31,15 @@
 #include <list>
 #include <string>
 
-void main( void )
+// Platform-specific sleep function
+#ifdef _WIN32
+    #define SLEEP_MS(ms) Sleep(ms)
+#else
+    #include <unistd.h>
+    #define SLEEP_MS(ms) usleep((ms) * 1000)
+#endif
+
+int main( void )
 {
     wsa_session session ;
 
@@ -120,7 +128,9 @@ void main( void )
             ::std::cout << "-----------------------------------------------" << ::std::endl ;
         }
 
-        Sleep( 1 ) ;
-        timestamp++ ;    
+        SLEEP_MS( 1 ) ;
+        timestamp++ ;
     }
+
+    return 0 ;
 }

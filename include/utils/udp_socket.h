@@ -27,10 +27,14 @@ THE SOFTWARE.
 #ifndef UDP_SOCKET_H
 #define UDP_SOCKET_H
 
+// Platform detection - include appropriate implementation
+#ifdef _WIN32
+
+// Windows implementation
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
 
-#pragma message("Note: including lib: Ws2_32.lib") 
+#pragma message("Note: including lib: Ws2_32.lib")
 #pragma comment(lib, "Ws2_32.lib")
 
 #include <string>
@@ -49,7 +53,7 @@ class wsa_session
         WSACleanup() ;
     }
 
-  private : 
+  private :
 
     WSAData data_ ;
 } ;
@@ -59,7 +63,7 @@ class udp_socket
 {
   public :
 
-	udp_socket( void ) 
+	udp_socket( void )
 	{
 		// UDP socket
 		socket_ = socket( AF_INET , SOCK_DGRAM , IPPROTO_UDP ) ;
@@ -69,7 +73,7 @@ class udp_socket
 		ioctlsocket( socket_ , FIONBIO , &arg ) ;
 	}
 
-	~udp_socket( void ) 
+	~udp_socket( void )
 	{
 		closesocket( socket_ ) ;
 	}
@@ -80,7 +84,7 @@ class udp_socket
         add.sin_family = AF_INET ;
         InetPton( AF_INET , address.c_str() , &add.sin_addr.s_addr ) ;
         add.sin_port = htons( port ) ;
-        
+
 		if ( sendto( socket_ , message.c_str() , (int)message.length() , 0 , reinterpret_cast<SOCKADDR *>( &add ) , sizeof( add ) ) > 0 )
 			return true ;
 
@@ -117,52 +121,59 @@ class udp_socket
 		return false ;
     }
 
-	bool enable_send_message_multicast( void ) 
+	bool enable_send_message_multicast( void )
 	{
 		struct in_addr add ;
 		add.s_addr = INADDR_ANY ;
 
-		int result = setsockopt( socket_ , 
-						   IPPROTO_IP , 
-						   IP_MULTICAST_IF , 
-						   (const char*)&add , 
+		int result = setsockopt( socket_ ,
+						   IPPROTO_IP ,
+						   IP_MULTICAST_IF ,
+						   (const char*)&add ,
 						   sizeof( add ) ) ;
-		return ( result != SOCKET_ERROR ) ; 
+		return ( result != SOCKET_ERROR ) ;
 	}
 
-	bool join_multicast_group( const ::std::string & ip_group ) 
-	{
-		struct ip_mreq imr; 
-        
-        InetPton( AF_INET , ip_group.c_str() , &imr.imr_multiaddr.s_addr ) ;
-		imr.imr_interface.s_addr = INADDR_ANY ;
-
-		int result = setsockopt( socket_ , 
-						   IPPROTO_IP , 
-						   IP_ADD_MEMBERSHIP , 
-						   (char*) &imr , 
-						   sizeof(struct ip_mreq) ) ;
-		return ( result != SOCKET_ERROR ) ; 
-	}
-
-	bool leave_multicast_group( const ::std::string & ip_group ) 
+	bool join_multicast_group( const ::std::string & ip_group )
 	{
 		struct ip_mreq imr;
-        
+
         InetPton( AF_INET , ip_group.c_str() , &imr.imr_multiaddr.s_addr ) ;
 		imr.imr_interface.s_addr = INADDR_ANY ;
 
-		int result = setsockopt( socket_ , 
-						   IPPROTO_IP , 
-						   IP_DROP_MEMBERSHIP ,
-						   (char*) &imr , 
+		int result = setsockopt( socket_ ,
+						   IPPROTO_IP ,
+						   IP_ADD_MEMBERSHIP ,
+						   (char*) &imr ,
 						   sizeof(struct ip_mreq) ) ;
-		return ( result != SOCKET_ERROR ) ; 
+		return ( result != SOCKET_ERROR ) ;
+	}
+
+	bool leave_multicast_group( const ::std::string & ip_group )
+	{
+		struct ip_mreq imr;
+
+        InetPton( AF_INET , ip_group.c_str() , &imr.imr_multiaddr.s_addr ) ;
+		imr.imr_interface.s_addr = INADDR_ANY ;
+
+		int result = setsockopt( socket_ ,
+						   IPPROTO_IP ,
+						   IP_DROP_MEMBERSHIP ,
+						   (char*) &imr ,
+						   sizeof(struct ip_mreq) ) ;
+		return ( result != SOCKET_ERROR ) ;
 	}
 
   private :
 
-	SOCKET		socket_ ; 
+	SOCKET		socket_ ;
 } ;
+
+#else
+
+// POSIX implementation (macOS, Linux, etc.)
+#include "udp_socket_posix.h"
+
+#endif
 
 #endif
